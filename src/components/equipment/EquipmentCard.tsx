@@ -11,9 +11,6 @@ interface EquipmentCardProps {
     compact?: boolean;
 }
 
-/**
- * Component for displaying an equipment item as a card
- */
 const EquipmentCard: React.FC<EquipmentCardProps> = ({
                                                          equipment,
                                                          compact = false
@@ -21,77 +18,89 @@ const EquipmentCard: React.FC<EquipmentCardProps> = ({
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
-    // Handle click on Reserve button
     const handleReserveClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
         dispatch(setSelectedEquipmentId(equipment.id));
         dispatch(setShowReservationModal(true));
     };
 
-    // Handle click on card (to navigate to details)
     const handleCardClick = () => {
         dispatch(setSelectedEquipmentId(equipment.id));
     };
 
     return (
         <div
-            className="equipment-card bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg hover:-translate-y-1"
+            className={`equipment-card ${compact ? 'compact' : ''}`}
             onClick={handleCardClick}
         >
-            <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-semibold text-gray-800">{equipment.name}</h3>
-                    <AvailabilityIndicator
-                        status={equipment.availability}
-                        showLabel={!compact}
-                        size={compact ? 'small' : 'medium'}
-                    />
-                </div>
+            <div className="equipment-card-header">
+                <h3 className="equipment-name">{equipment.name}</h3>
+                <div className="equipment-type-badge">{equipment.type}</div>
+            </div>
 
-                <div className="equipment-type text-sm text-gray-600 mb-2">
-                    {equipment.type}
-                </div>
-
+            <div className="equipment-card-content">
                 {!compact && (
-                    <>
-                        <p className="text-gray-700 text-sm mb-3">
-                            {equipment.description.length > 120
-                                ? `${equipment.description.substring(0, 120)}...`
-                                : equipment.description}
-                        </p>
-
-                        <div className="text-sm text-gray-600 mb-3">
-                            <span className="font-medium">{t('location')}:</span> {equipment.location}
-                        </div>
-
-                        {equipment.restrictions && (
-                            <div className="text-sm text-gray-600 mb-3">
-                                <span className="font-medium">{t('restrictions')}:</span> {equipment.restrictions}
-                            </div>
-                        )}
-                    </>
+                    <p className="equipment-description">{equipment.description}</p>
                 )}
 
-                <div className="flex justify-between items-center mt-3">
-                    <Link
-                        to={`/equipment/${equipment.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                        {t('view_details')}
-                    </Link>
+                <div className="equipment-details">
+                    <div className="equipment-detail">
+                        <span className="detail-label">{t('location')}:</span>
+                        <span className="detail-value">{equipment.location}</span>
+                    </div>
 
-                    {equipment.availability !== 'Unavailable' && (
-                        <button
-                            onClick={handleReserveClick}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                            disabled={equipment.availability === 'Unavailable'}
-                        >
-                            {t('reserve')}
-                        </button>
-                    )}
+                    <div className="equipment-detail">
+                        <span className="detail-label">{t('availability')}:</span>
+                        <AvailabilityIndicator
+                            status={equipment.availability}
+                            size={compact ? 'small' : 'medium'}
+                        />
+                    </div>
                 </div>
+
+                {!compact && equipment.restrictions && (
+                    <div className="equipment-restrictions">
+                        <h4>{t('restrictions')}:</h4>
+                        <p>{equipment.restrictions}</p>
+                    </div>
+                )}
+
+                {!compact && equipment.relatedTopics && equipment.relatedTopics.length > 0 && (
+                    <div className="related-topics">
+                        <h4>{t('related_topics')}:</h4>
+                        <div className="topic-tags">
+                            {equipment.relatedTopics.map(topicId => (
+                                <Link
+                                    key={topicId}
+                                    to={`/topics/${topicId}`}
+                                    className="topic-tag"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {topicId}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="equipment-card-footer">
+                <Link
+                    to={`/equipment/${equipment.id}`}
+                    className="view-details-button"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {t('view_details')}
+                </Link>
+
+                <button
+                    className={`reserve-button ${equipment.availability === 'Unavailable' ? 'disabled' : ''}`}
+                    onClick={handleReserveClick}
+                    disabled={equipment.availability === 'Unavailable'}
+                >
+                    {t('reserve')}
+                </button>
             </div>
         </div>
     );

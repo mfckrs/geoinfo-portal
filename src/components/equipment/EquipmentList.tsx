@@ -3,34 +3,23 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
 import {
     setCurrentPage,
-    resetFilters,
-    setSearchTerm
+    setSortBy,
+    setSortOrder,
+    setViewMode
 } from '../../features/equipment/equipmentSlice';
-import { useGetEquipmentQuery, useFilterEquipmentQuery } from '../../services/equipmentApi';
+import {
+    useGetEquipmentQuery,
+    useFilterEquipmentQuery
+} from '../../services/equipmentApi';
 import EquipmentCard from './EquipmentCard';
 import LoadingSpinner from '../common/LoadingSpinner';
-import ErrorBoundary from '../common/ErrorBoundary';
+import { Equipment } from '../../types';
 
-interface EquipmentListProps {
-    title?: string;
-    showFilters?: boolean;
-    relatedTopicId?: string;
-    maxItems?: number;
-}
-
-/**
- * Component that displays a list of equipment with filtering and pagination
- */
-const EquipmentList: React.FC<EquipmentListProps> = ({
-                                                         title,
-                                                         showFilters = true,
-                                                         relatedTopicId,
-                                                         maxItems
-                                                     }) => {
+const EquipmentList: React.FC = () => {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
 
-    // Get equipment state from Redux
+    // Get equipment-related state from Redux
     const {
         selectedTypes,
         selectedLocations,
@@ -38,174 +27,202 @@ const EquipmentList: React.FC<EquipmentListProps> = ({
         searchTerm,
         currentPage,
         itemsPerPage,
-        viewMode
+        viewMode,
+        sortBy,
+        sortOrder
     } = useAppSelector(state => state.equipment);
 
-    // Fetch equipment based on filters or get all equipment
+    // Fetch all equipment for initial load or when no filters are applied
+    const { data: allEquipment, isLoading: isLoadingAll, error: errorAll } =
+        useGetEquipmentQuery();
+
+    // Fetch filtered equipment when filters are applied
     const filters = {
-        types: selectedTypes,
-        locations: selectedLocations,
-        availability: selectedAvailability
+        types: selectedTypes.length > 0 ? selectedTypes : undefined,
+        availability: selectedAvailability || undefined,
+        location: selectedLocations.length > 0 ? undefined : undefined // API needs adjustment to handle array
     };
 
-    const { data: filteredEquipment, isLoading: isFilterLoading, error: filterError } =
-        useFilterEquipmentQuery(filters, { skip: (!selectedTypes.length && !selectedLocations.length && !selectedAvailability) });
+    const hasFilters = selectedTypes.length > 0 || selectedLocations.length > 0 || selectedAvailability !== null;
 
-    const { data: allEquipment, isLoading: isAllLoading, error: allError } =
-        useGetEquipmentQuery(undefined, { skip: !!(selectedTypes.length || selectedLocations.length || selectedAvailability) });
+    const {
+        data: filteredEquipment,
+        isLoading: isLoadingFiltered,
+        error: errorFiltered
+    } = useFilterEquipmentQuery(filters, {
+        skip: !hasFilters
+    });
 
-    const equipment = filteredEquipment || allEquipment || [];
-    const isLoading = isFilterLoading || isAllLoading;
-    const error = filterError || allError;
+    // Determine which data to use
+    const equipment = hasFilters ? filteredEquipment : allEquipment;
+    const isLoading = hasFilters ? isLoadingFiltered : isLoadingAll;
+    const error = hasFilters ? errorFiltered : errorAll;
 
-    // Reset to first page when filters change
+    // Reset page when filters change
     useEffect(() => {
         dispatch(setCurrentPage(1));
     }, [selectedTypes, selectedLocations, selectedAvailability, searchTerm, dispatch]);
 
-    // Filter by search term (client-side)
-    const filteredBySearch = searchTerm
-        ? equipment.filter(item =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.type.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        : equipment;
+    // Apply client-side filtering for search term
+    const filteredBySearch = equipment ? equipment.filter(item =>
+        searchTerm.trim() === '' ||
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.type.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
-    // Filter by related topic if provided
-    const filteredByTopic = relatedTopicId
-        ? filteredBySearch.filter(item => item.relatedTopics.includes(relatedTopicId))
-        : filteredBySearch;
+    // Apply client-side sorting
+    const sortedEquipment = [...filteredBySearch].sort((a, b) => {
+        let comparison = 0;
 
-    // Apply pagination
-    const totalItems = filteredByTopic.length;
+        switch (sortBy) {
+            case 'name':
+                comparison = a.name.localeCompare(b.name);
+                break;
+            case 'type':
+                comparison = a.type.localeCompare(b.type);
+                break;
+            case 'availability':
+                // Custom sort order for availability
+                { const availabilityOrder = { 'Available': 0, 'Limited': 1, 'Unavailable': 2 };
+                comparison = availabilityOrder[a.availability] - availabilityOrder[b.availability];
+                break; }
+            default:
+                comparison = a.name.localeCompare(b.name);
+        }
+
+        return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Pagination
+    const totalItems = sortedEquipment.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedEquipment = sortedEquipment.slice(startIndex, startIndex + itemsPerPage);
 
-    const paginatedItems = maxItems
-        ? filteredByTopic.slice(0, maxItems)
-        : filteredByTopic.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-    // Handle page change
     const handlePageChange = (page: number) => {
         dispatch(setCurrentPage(page));
         // Scroll to top of list
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Handle search
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        dispatch(setSearchTerm(e.target.value));
+    const handleSortChange = (newSortBy: 'name' | 'type' | 'availability') => {
+        if (sortBy === newSortBy) {
+            // Toggle sort order if clicking the same column
+            dispatch(setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc'));
+        } else {
+            dispatch(setSortBy(newSortBy));
+            dispatch(setSortOrder('asc'));
+        }
     };
 
-    // Handle reset filters
-    const handleResetFilters = () => {
-        dispatch(resetFilters());
+    const handleViewModeChange = (mode: 'grid' | 'list') => {
+        dispatch(setViewMode(mode));
     };
 
-    // Render pagination controls
-    const renderPagination = () => {
-        if (totalPages <= 1) return null;
-
-        return (
-            <div className="pagination flex justify-center mt-6">
-                <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
-                >
-                    &laquo;
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`px-3 py-1 mx-1 rounded ${
-                            currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200'
-                        }`}
-                    >
-                        {page}
-                    </button>
-                ))}
-
-                <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 mx-1 rounded bg-gray-200 disabled:opacity-50"
-                >
-                    &raquo;
-                </button>
-            </div>
-        );
-    };
-
-    if (isLoading) return <LoadingSpinner />;
+    if (isLoading) {
+        return <LoadingSpinner />;
+    }
 
     if (error) {
-        return (
-            <div className="error-container p-4 bg-red-100 text-red-700 rounded">
-                <h3 className="font-bold">{t('error_loading')}</h3>
-                <p>{t('please_try_again')}</p>
-            </div>
-        );
+        return <div className="error-message">{t('error_loading')}</div>;
+    }
+
+    if (!equipment || equipment.length === 0) {
+        return <div className="no-results">{t('no_results')}</div>;
     }
 
     return (
-        <ErrorBoundary>
-            <div className="equipment-list">
-                {title && <h2 className="text-2xl font-bold mb-4">{title}</h2>}
+        <div className="equipment-list-container">
+            <div className="list-header">
+                <div className="results-count">
+                    {t('showing_results', { count: totalItems })}
+                </div>
 
-                {showFilters && (
-                    <div className="filters mb-6">
-                        <div className="search-box mb-4">
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                placeholder={t('search_placeholder')}
-                                className="w-full p-2 border rounded"
-                            />
-                        </div>
+                <div className="list-controls">
+                    <div className="sort-controls">
+                        <label htmlFor="sort-by">{t('sort_by')}:</label>
+                        <select
+                            id="sort-by"
+                            value={sortBy}
+                            onChange={(e) => handleSortChange(e.target.value as never)}
+                            className="sort-select"
+                        >
+                            <option value="name">{t('name')}</option>
+                            <option value="type">{t('type')}</option>
+                            <option value="availability">{t('availability')}</option>
+                        </select>
 
-                        {(selectedTypes.length > 0 || selectedLocations.length > 0 || selectedAvailability) && (
-                            <div className="active-filters flex flex-wrap gap-2 mb-4">
-                                <span className="text-sm text-gray-600">{t('active_filters')}:</span>
-                                <button
-                                    onClick={handleResetFilters}
-                                    className="text-sm text-blue-600 hover:text-blue-800"
-                                >
-                                    {t('clear_filters')}
-                                </button>
-                            </div>
-                        )}
+                        <button
+                            className="sort-direction-button"
+                            onClick={() => dispatch(setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc'))}
+                            aria-label={sortOrder === 'asc' ? t('ascending') : t('descending')}
+                        >
+                            {sortOrder === 'asc' ? '↑' : '↓'}
+                        </button>
                     </div>
-                )}
 
-                {paginatedItems.length === 0 ? (
-                    <div className="no-results p-4 bg-gray-100 rounded text-center">
-                        <p>{t('no_results')}</p>
+                    <div className="view-mode-controls">
+                        <button
+                            className={`view-mode-button ${viewMode === 'grid' ? 'active' : ''}`}
+                            onClick={() => handleViewModeChange('grid')}
+                            aria-label={t('grid_view')}
+                        >
+                            <span className="icon">□□</span>
+                        </button>
+                        <button
+                            className={`view-mode-button ${viewMode === 'list' ? 'active' : ''}`}
+                            onClick={() => handleViewModeChange('list')}
+                            aria-label={t('list_view')}
+                        >
+                            <span className="icon">≡</span>
+                        </button>
                     </div>
-                ) : (
-                    <>
-                        <div className={`equipment-grid ${
-                            viewMode === 'grid'
-                                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
-                                : 'space-y-4'
-                        }`}>
-                            {paginatedItems.map(item => (
-                                <EquipmentCard
-                                    key={item.id}
-                                    equipment={item}
-                                    compact={viewMode === 'grid'}
-                                />
-                            ))}
-                        </div>
-
-                        {!maxItems && totalPages > 1 && renderPagination()}
-                    </>
-                )}
+                </div>
             </div>
-        </ErrorBoundary>
+
+            <div className={`equipment-items ${viewMode}`}>
+                {paginatedEquipment.map((item: Equipment) => (
+                    <EquipmentCard
+                        key={item.id}
+                        equipment={item}
+                        compact={viewMode === 'list'}
+                    />
+                ))}
+            </div>
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button
+                        className="pagination-button"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    >
+                        {t('previous')}
+                    </button>
+
+                    <div className="page-numbers">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                className={`page-number ${page === currentPage ? 'active' : ''}`}
+                                onClick={() => handlePageChange(page)}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        className="pagination-button"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                    >
+                        {t('next')}
+                    </button>
+                </div>
+            )}
+        </div>
     );
 };
 

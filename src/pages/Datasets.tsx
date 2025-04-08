@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -29,7 +29,7 @@ import { useGetDatasetsQuery } from '../services/datasetsApi';
 import { DATASET_SOURCES, DATASET_FORMATS, PROJECT_CATEGORIES } from '../utils/constants';
 
 // Utils
-import { formatFileSize, formatDate } from '../utils/formatters';
+import { formatDate } from '../utils/formatters';
 
 // Types
 import { Dataset } from '../types';
