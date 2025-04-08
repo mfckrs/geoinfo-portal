@@ -1,4 +1,7 @@
-import { Resource, ResourceType, Difficulty } from './index';
+import {Resource, ResourceType, Difficulty} from './index';
+
+// Type for handling resource sorting
+export type ResourceSortField = 'title' | 'type' | 'difficulty' | 'language';
 
 // Extended resource interface with additional properties
 export interface ResourceWithDetails extends Resource {
@@ -13,10 +16,9 @@ export interface ResourceWithDetails extends Resource {
     userNotes?: string;
 }
 
-// Resource grouping by type
-export interface ResourcesByType {
-    [key in ResourceType]: Resource[];
-}
+export type ResourcesByField = {
+    [key in ResourceSortField]: Resource[];
+};
 
 // Resource grouping by category
 export interface ResourcesByCategory {
@@ -48,8 +50,6 @@ export interface ResourceCardOptions {
     compact: boolean;
 }
 
-// Type for handling resource sorting
-export type ResourceSortField = 'title' | 'type' | 'difficulty' | 'language';
 
 // Interface for educational article content type
 export interface EducationalArticle extends Resource {

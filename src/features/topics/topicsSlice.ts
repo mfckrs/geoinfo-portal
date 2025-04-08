@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Topic } from '../../types';
 
 interface TopicsState {
     selectedCategory: string | null;

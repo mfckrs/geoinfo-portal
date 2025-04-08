@@ -3,6 +3,7 @@ import {setupListeners} from '@reduxjs/toolkit/query';
 import languageReducer from '../features/language/languageSlice';
 import questionnaireReducer from '../features/questionnaire/questionnaireSlice';
 import topicsReducer from '../features/topics/topicsSlice';
+import datasetsReducer from '../features/datasets/datasetsSlice';
 import {api} from '../services/api';
 
 export const store = configureStore({
@@ -10,6 +11,7 @@ export const store = configureStore({
         language: languageReducer,
         questionnaire: questionnaireReducer,
         topics: topicsReducer,
+        datasets: datasetsReducer,
         [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>
