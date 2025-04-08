@@ -4,6 +4,7 @@ import languageReducer from '../features/language/languageSlice';
 import questionnaireReducer from '../features/questionnaire/questionnaireSlice';
 import topicsReducer from '../features/topics/topicsSlice';
 import datasetsReducer from '../features/datasets/datasetsSlice';
+import equipmentReducer from '../features/equipment/equipmentSlice';
 import {api} from '../services/api';
 
 export const store = configureStore({
@@ -12,6 +13,7 @@ export const store = configureStore({
         questionnaire: questionnaireReducer,
         topics: topicsReducer,
         datasets: datasetsReducer,
+        equipment: equipmentReducer,
         [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>

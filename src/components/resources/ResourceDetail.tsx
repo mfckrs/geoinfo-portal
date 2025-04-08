@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { useAppDispatch } from '../../store/hooks';
 import { setSelectedResourceId } from '../../features/resources/resourcesSlice';
 import { useGetResourceByIdQuery, useGetResourcesByTopicQuery } from '../../services/resourcesApi';
-import { Resource, ResourceType } from '../../types';
+import { ResourceType } from '../../types';
 import EducationalContentViewer from './EducationalContentViewer';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { formatURL } from '../../utils/formatters';

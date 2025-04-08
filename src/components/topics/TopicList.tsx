@@ -16,7 +16,6 @@ import {
     removeCareerRelevanceFilter,
 } from '../../features/topics/topicsSlice';
 import { useGetTopicsQuery } from '../../services/topicsApi';
-import { Topic, Difficulty } from '../../types';
 import TopicCard from './TopicCard';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { PROJECT_CATEGORIES, DIFFICULTY_LEVELS } from '../../utils/constants';

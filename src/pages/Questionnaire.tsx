@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import QuestionCard from '../components/questionnaire/QuestionCard';
 import QuestionnaireResults from '../components/questionnaire/QuestionnaireResults';
+import ProgressBar from '../components/questionnaire/ProgressBar';
 import './Questionnaire.css';
 
 const Questionnaire: React.FC = () => {
