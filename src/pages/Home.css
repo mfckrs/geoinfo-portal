@@ -1,0 +1,202 @@
+:root {
+    --light-text: #666; /* Define the custom property */
+}
+
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 3rem 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-section h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.hero-description {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: var(--light-text);
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.visualization-section {
+    padding: 2rem 0;
+    text-align: center;
+}
+
+.section-description {
+    max-width: 800px;
+    margin: 0 auto 2rem;
+    color: var(--light-text);
+}
+
+.chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+}
+
+.featured-content {
+    padding: 2rem 0;
+}
+
+.featured-content h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--dark-text);
+}
+
+.featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.featured-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.featured-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.featured-card h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+.featured-card p {
+    color: var(--light-text);
+    margin-bottom: 1rem;
+}
+
+.featured-card a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.resource-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.resource-type {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0 8px 0 8px;
+    color: white;
+    font-weight: 500;
+}
+
+.resource-type.documentation {
+    background-color: #4285f4;
+}
+
+.resource-type.tutorial {
+    background-color: #34a853;
+}
+
+.resource-type.academic {
+    background-color: #ea4335;
+}
+
+.resource-type.community {
+    background-color: #fbbc04;
+}
+
+.resource-card h3 {
+    margin-top: 0.5rem;
+    font-size: 1.3rem;
+    color: var(--dark-text);
+}
+
+.resource-card p {
+    color: var(--light-text);
+    margin-bottom: 1rem;
+}
+
+.resource-card a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.get-started {
+    text-align: center;
+    background-color: var(--light-bg);
+    padding: 3rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+.get-started h2 {
+    color: var(--dark-text);
+    margin-bottom: 1rem;
+}
+
+.get-started p {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    color: var(--light-text);
+}
+
+@media (max-width: 768px) {
+    .button-group {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .featured-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* RTL support */
+[dir="rtl"] .resource-type {
+    right: auto;
+    left: 0;
+    border-radius: 8px 0 8px 0;
+}
+
+[dir="rtl"] .featured-card a,
+[dir="rtl"] .resource-card a {
+    direction: rtl;
+}
